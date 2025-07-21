@@ -281,7 +281,7 @@ extern int tropcorr(gtime_t time, const nav_t *nav, const double *pos,
 static int rescode(int iter, const obsd_t *obs, int n, const double *rs,
                    const double *dts, const double *vare, const int *svh,
                    const nav_t *nav, const double *x, const prcopt_t *opt,
-                   const ssat_t *ssat, double *v, double *H, double *var,
+                   ssat_t *ssat, double *v, double *H, double *var,
                    double *azel, int *vsat, double *resp, int *ns)
 {
     gtime_t time;
@@ -357,11 +357,19 @@ static int rescode(int iter, const obsd_t *obs, int n, const double *rs,
         /* variance of pseudorange error */
         var[nv]=vare[i]+vmeas+vion+vtrp;
         if (ssat)
-            var[nv++]+=varerr(opt,&ssat[i],&obs[i],azel[1+i*2],sys);
+            var[nv++]+=varerr(opt,ssat,obs+i,azel[1+i*2],sys);
         else
-            var[nv++]+=varerr(opt,NULL,&obs[i],azel[1+i*2],sys);
+            var[nv++]+=varerr(opt,NULL,obs+i,azel[1+i*2],sys);
         trace(4,"sat=%2d azel=%5.1f %4.1f res=%7.3f sig=%5.3f\n",obs[i].sat,
               azel[i*2]*R2D,azel[1+i*2]*R2D,resp[i],sqrt(var[nv-1]));
+
+        // Store satellite correction
+        if (ssat) {
+                ssat[sat-1].dion = dion;
+                ssat[sat-1].dtrp = dtrp;
+                ssat[sat-1].clkcorr = -CLIGHT*dts[i*2];
+                ssat[sat-1].weight = 1.0/sqrt(var[nv-1]);
+        }
     }
     /* constraint to avoid rank-deficient */
     for (i=0;i<NX-3;i++) {
@@ -405,7 +413,7 @@ static int valsol(const double *azel, const int *vsat, int n,
 /* estimate receiver position ------------------------------------------------*/
 static int estpos(const obsd_t *obs, int n, const double *rs, const double *dts,
                   const double *vare, const int *svh, const nav_t *nav,
-                  const prcopt_t *opt, const ssat_t *ssat, sol_t *sol, double *azel,
+                  const prcopt_t *opt, ssat_t *ssat, sol_t *sol, double *azel,
                   int *vsat, double *resp, char *msg)
 {
     double x[NX]={0},dx[NX],Q[NX*NX],*v,*H,*var,sig;
