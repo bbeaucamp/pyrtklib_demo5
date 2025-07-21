@@ -261,12 +261,13 @@ extern "C" {
 #define MAXRAWLEN   16384               /* max length of receiver raw message */
 #define MAXERRMSG   4096                /* max length of error/warning message */
 #define MAXANT      64                  /* max length of station name/antenna type */
-#define MAXSOLBUF   256                 /* max number of solution buffer */
-#define MAXOBSBUF   128                 /* max number of observation data buffer */
+#define MAXSOLBUF   8192                /* max number of solution buffer */
+#define MAXOBSBUF   256                 /* max number of observation data buffer */
 #define MAXNRPOS    16                  /* max number of reference positions */
 #define MAXLEAPS    64                  /* max number of leap seconds table */
 #define MAXGISLAYER 32                  /* max number of GIS data layers */
-#define MAXRCVCMD   4096                /* max length of receiver commands */
+#define MAXITR      10                  /* max number of iteration for point pos */
+#define MAXRCVCMD   4096                /* max length of receiver command */
 #define MAX_CODE_BIASES 3               /* max # of different code biases per freq */
 #define MAX_CODE_BIAS_FREQS 2           /* max # of freqs supported for code biases  */
 
@@ -1151,10 +1152,15 @@ typedef struct {        /* satellite status type */
     double phw;         /* phase windup (cycle) */
     gtime_t pt[2][NFREQ]; /* previous carrier-phase time */
     double  ph[2][NFREQ]; /* previous carrier-phase observable (cycle) */
-    double dion;        /* ionospheric delay (m) */
-    double dtrp;        /* tropospheric delay (m) */
-    double clkcorr;     /* -CLIGHT*dts[i*2] (m) */
-    double weight;      /* sqrt(var[nv-1]) (m) */
+    double dion[MAXITR];        /* ionospheric delay (m) */
+    double dtrp[MAXITR];        /* tropospheric delay (m) */
+    double clkcorr[MAXITR];     /* -CLIGHT*dts[i*2] (m) */
+    double weight[MAXITR];      /* 1/sqrt(variance) */
+    double vare[MAXITR];        /* variance of ephemeris (m^2) */
+    double vmeas[MAXITR];       /* variance of pseudorange measurements (m^2) */
+    double vion[MAXITR];        /* variance of ionospheric correction (m^2) */
+    double vtrp[MAXITR];        /* variance of tropospheric correction (m^2) */
+    double var_err[MAXITR];     /* variance from varerr (m^2) */
 } ssat_t;
 
 typedef struct {        /* ambiguity control type */

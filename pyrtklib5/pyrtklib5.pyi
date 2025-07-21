@@ -4471,6 +4471,33 @@ class ssat_t:
     def __init__(self) -> None:
         ...
     @property
+    def dion(self) -> Arr1Ddouble:
+        ...
+    @property
+    def dtrp(self) -> Arr1Ddouble:
+        ...
+    @property
+    def clkcorr(self) -> Arr1Ddouble:
+        ...
+    @property
+    def weight(self) -> Arr1Ddouble:
+        ...
+    @property
+    def vare(self) -> Arr1Ddouble:
+        ...
+    @property
+    def vmeas(self) -> Arr1Ddouble:
+        ...
+    @property
+    def vion(self) -> Arr1Ddouble:
+        ...
+    @property
+    def vtrp(self) -> Arr1Ddouble:
+        ...
+    @property
+    def var_err(self) -> Arr1Ddouble:
+        ...
+    @property
     def azel(self) -> Arr1Ddouble:
         ...
     @property
@@ -4527,10 +4554,7 @@ class ssat_t:
     @property
     def vsat(self) -> ...:
         ...
-    dion: float
-    dtrp: float
-    clkcorr: float
-    weight: float
+
 class ssr_t:
     hrclk: float
     iodcrc: int

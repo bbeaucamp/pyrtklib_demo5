@@ -36,7 +36,6 @@
 #else
 #define NX          (4+4)       /* # of estimated parameters */
 #endif
-#define MAXITR      10          /* max number of iteration for point pos */
 #define ERR_ION     5.0         /* ionospheric delay Std (m) */
 #define ERR_TROP    3.0         /* tropspheric delay Std (m) */
 #define ERR_SAAS    0.3         /* Saastamoinen model error Std (m) */
@@ -286,6 +285,7 @@ static int rescode(int iter, const obsd_t *obs, int n, const double *rs,
 {
     gtime_t time;
     double r,freq,dion=0.0,dtrp=0.0,vmeas,vion=0.0,vtrp=0.0,rr[3],pos[3],dtr,e[3],P;
+    double var_err;
     int i,j,nv=0,sat,sys,mask[NX-3]={0};
 
     for (i=0;i<3;i++) rr[i]=x[i];
@@ -335,8 +335,6 @@ static int rescode(int iter, const obsd_t *obs, int n, const double *rs,
         
         /* pseudorange residual */
         v[nv]=P-(r+dtr-CLIGHT*dts[i*2]+dion+dtrp);
-        trace(4,"sat=%d: v=%.3f P=%.3f r=%.3f dtr=%.6f dts=%.6f dion=%.3f dtrp=%.3f\n",
-            sat,v[nv],P,r,dtr,dts[i*2],dion,dtrp);
         
         /* design matrix */
         for (j=0;j<NX;j++) {
@@ -355,21 +353,25 @@ static int rescode(int iter, const obsd_t *obs, int n, const double *rs,
         vsat[i]=1; resp[i]=v[nv]; (*ns)++;
         
         /* variance of pseudorange error */
-        var[nv]=vare[i]+vmeas+vion+vtrp;
-        if (ssat)
-            var[nv++]+=varerr(opt,ssat,obs+i,azel[1+i*2],sys);
-        else
-            var[nv++]+=varerr(opt,NULL,obs+i,azel[1+i*2],sys);
-        trace(4,"sat=%2d azel=%5.1f %4.1f res=%7.3f sig=%5.3f\n",obs[i].sat,
-              azel[i*2]*R2D,azel[1+i*2]*R2D,resp[i],sqrt(var[nv-1]));
+        var_err = varerr(opt, ssat ? &ssat[sat-1] : NULL, &obs[i], azel[1+i*2], sys);
+        var[nv]=vare[i]+vmeas+vion+vtrp+var_err;
 
-        // Store satellite correction
-        if (ssat) {
-                ssat[sat-1].dion = dion;
-                ssat[sat-1].dtrp = dtrp;
-                ssat[sat-1].clkcorr = -CLIGHT*dts[i*2];
-                ssat[sat-1].weight = 1.0/sqrt(var[nv-1]);
+        trace(4,"sat=%2d azel=%5.1f %4.1f res=%7.3f sig=%5.3f\n",obs[i].sat,
+              azel[i*2]*R2D,azel[1+i*2]*R2D,resp[i],sqrt(var[nv]));
+
+        /* store satellite correction */
+        if (ssat && iter < MAXITR) {
+            ssat[sat-1].dion[iter] = dion;
+            ssat[sat-1].dtrp[iter] = dtrp;
+            ssat[sat-1].clkcorr[iter] = -CLIGHT*dts[i*2];
+            ssat[sat-1].weight[iter] = 1.0/sqrt(var[nv]);
+            ssat[sat-1].vare[iter] = vare[i];
+            ssat[sat-1].vmeas[iter] = vmeas;
+            ssat[sat-1].vion[iter] = vion;
+            ssat[sat-1].vtrp[iter] = vtrp;
+            ssat[sat-1].var_err[iter] = var_err;
         }
+        nv++;
     }
     /* constraint to avoid rank-deficient */
     for (i=0;i<NX-3;i++) {
@@ -481,7 +483,7 @@ static int estpos(const obsd_t *obs, int n, const double *rs, const double *dts,
 /* RAIM FDE (failure detection and exclusion) -------------------------------*/
 static int raim_fde(const obsd_t *obs, int n, const double *rs,
                     const double *dts, const double *vare, const int *svh,
-                    const nav_t *nav, const prcopt_t *opt, const ssat_t *ssat, 
+                    const nav_t *nav, const prcopt_t *opt, ssat_t *ssat, 
                     sol_t *sol, double *azel, int *vsat, double *resp, char *msg)
 {
     obsd_t *obs_e;
@@ -657,7 +659,7 @@ extern int pntpos(const obsd_t *obs, int n, const nav_t *nav,
 {
     prcopt_t opt_=*opt;
     double *rs,*dts,*var,*azel_,*resp;
-    int i,stat,vsat[MAXOBS]={0},svh[MAXOBS];
+    int i,j,stat,vsat[MAXOBS]={0},svh[MAXOBS];
     
     trace(3,"pntpos  : tobs=%s n=%d\n",time_str(obs[0].time,3),n);
     
@@ -677,6 +679,17 @@ extern int pntpos(const obsd_t *obs, int n, const nav_t *nav,
         for (i=0;i<MAXSAT;i++) {
             ssat[i].snr_rover[0]=0;
             ssat[i].snr_base[0]=0;
+            for (j=0; j<MAXITR; j++) {
+                ssat[i].dion[j] = 0.0;
+                ssat[i].dtrp[j] = 0.0;
+                ssat[i].clkcorr[j] = 0.0;
+                ssat[i].weight[j] = 0.0;
+                ssat[i].vare[j] = 0.0;
+                ssat[i].vmeas[j] = 0.0;
+                ssat[i].vion[j] = 0.0;
+                ssat[i].vtrp[j] = 0.0;
+                ssat[i].var_err[j] = 0.0;
+            }
         }
         for (i=0;i<n;i++)
             ssat[obs[i].sat-1].snr_rover[0]=obs[i].SNR[0];
