@@ -466,6 +466,7 @@ static int estpos(const obsd_t *obs, int n, const double *rs, const double *dts,
             sol->qr[5]=(float)Q[2];    /* cov zx */
             sol->ns=(uint8_t)ns;
             sol->age=sol->ratio=0.0;
+            sol->niter = i;
             
             /* validate solution */
             if ((stat=valsol(azel,vsat,n,opt,v,nv,NX,msg))) {
@@ -476,6 +477,7 @@ static int estpos(const obsd_t *obs, int n, const double *rs, const double *dts,
         }
     }
     if (i>=MAXITR) sprintf(msg,"iteration divergent i=%d",i);
+    sol->niter = -1;
     
     free(v); free(H); free(var);
     return 0;

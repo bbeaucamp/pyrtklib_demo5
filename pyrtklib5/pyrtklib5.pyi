@@ -4362,6 +4362,7 @@ class sol_t:
     age: float
     eventime: gtime_t
     ns: int
+    niter: int
     prev_ratio1: float
     prev_ratio2: float
     ratio: float

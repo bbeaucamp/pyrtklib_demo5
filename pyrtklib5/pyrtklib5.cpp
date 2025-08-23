@@ -2108,6 +2108,7 @@ PYBIND11_MODULE(pyrtklib5, m) {
         .def_readwrite("type",&sol_t::type)
         .def_readwrite("stat",&sol_t::stat)
         .def_readwrite("ns",&sol_t::ns)
+        .def_readwrite("niter",&sol_t::niter)
         .def_readwrite("age",&sol_t::age)
         .def_readwrite("ratio",&sol_t::ratio)
         .def_readwrite("prev_ratio1",&sol_t::prev_ratio1)

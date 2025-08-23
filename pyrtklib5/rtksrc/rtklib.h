@@ -887,6 +887,7 @@ typedef struct {        /* solution type */
     float prev_ratio1;   /* previous initial AR ratio factor for validation */
     float prev_ratio2;   /* previous final AR ratio factor for validation */
     float thres;        /* AR ratio threshold for validation */
+    int niter;         /* number of iterations to convergence */
 } sol_t;
 
 typedef struct {        /* solution buffer type */
