@@ -1300,6 +1300,9 @@ PYBIND11_MODULE(pyrtklib5, m) {
     m.attr("TSYS_QZS")=4;
     m.attr("TSYS_CMP")=5;
     m.attr("TSYS_IRN")=6;
+    m.attr("VIS_UNKNOWN")=VIS_UNKNOWN;
+    m.attr("VIS_LOS")=VIS_LOS;
+    m.attr("VIS_NLOS")=VIS_NLOS;
     m.attr("NFREQ")=3;
     m.attr("NFREQGLO")=2;
     m.attr("NEXOBS")=0;
@@ -1752,6 +1755,7 @@ PYBIND11_MODULE(pyrtklib5, m) {
         .def_readwrite("timevalid",&obsd_t::timevalid)
         .def_readwrite("eventime",&obsd_t::eventime)
         .def_readwrite("freq",&obsd_t::freq)
+        .def_readwrite("vis",&obsd_t::vis)
         .def_property_readonly("SNR",[](obsd_t& o) {Arr1D<uint16_t>* tmp = new Arr1D<uint16_t>(o.SNR,NFREQ+NEXOBS);return tmp;},py::return_value_policy::reference)
         .def_property_readonly("LLI",[](obsd_t& o) {Arr1D<uint8_t>* tmp = new Arr1D<uint8_t>(o.LLI,NFREQ+NEXOBS);return tmp;},py::return_value_policy::reference)
         .def_property_readonly("code",[](obsd_t& o) {Arr1D<uint8_t>* tmp = new Arr1D<uint8_t>(o.code,NFREQ+NEXOBS);return tmp;},py::return_value_policy::reference)
@@ -2282,6 +2286,8 @@ PYBIND11_MODULE(pyrtklib5, m) {
         .def_property_readonly("posopt",[](prcopt_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.posopt,6);return tmp;},py::return_value_policy::reference)
         .def_property_readonly("odisp",[](prcopt_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.odisp,2,6*11);return tmp;},py::return_value_policy::reference)
         .def_property_readonly("pppopt",[](prcopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.pppopt,256);return tmp;},py::return_value_policy::reference)
+        .def_readwrite("wgtmode",&prcopt_t::wgtmode)
+        .def_property_readonly("viswgt",[](prcopt_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.viswgt,3);return tmp;},py::return_value_policy::reference)
         .def_property_readonly("ptr",[](prcopt_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<solopt_t>(m,"solopt_t").def(py::init())

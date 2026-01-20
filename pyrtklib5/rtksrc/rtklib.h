@@ -126,6 +126,11 @@ extern "C" {
 #define TSYS_CMP    5                   /* time system: BeiDou time */
 #define TSYS_IRN    6                   /* time system: IRNSS time */
 
+/* visibility status constants */
+#define VIS_UNKNOWN 0                   /* visibility unknown */
+#define VIS_LOS     1                   /* line-of-sight */
+#define VIS_NLOS    2                   /* non-line-of-sight */
+
 #ifndef NFREQ
 #define NFREQ       3                   /* number of carrier frequencies */
 #endif
@@ -566,6 +571,7 @@ typedef struct {        /* observation data record */
     uint8_t Lstd[NFREQ+NEXOBS]; /* stdev of carrier phase (0.004 cycles)  */
     uint8_t Pstd[NFREQ+NEXOBS]; /* stdev of pseudorange (0.01*2^(n+5) meters) */
     uint8_t freq; /* GLONASS frequency channel (0-13) */
+    uint8_t vis;  /* visibility flag (0:unknown, 1:LOS, 2:NLOS) */
 
 } obsd_t;
 
@@ -1051,6 +1057,8 @@ typedef struct {        /* processing options type */
     double odisp[2][6*11]; /* ocean tide loading parameters {rov,base} */
     int  freqopt;       /* disable L2-AR */
     char pppopt[256];   /* ppp option */
+    int  wgtmode;       /* weighting mode (0:default, 1:custom visibility) */
+    double viswgt[3];   /* visibility weight factors [unknown, LOS, NLOS] */
 } prcopt_t;
 
 typedef struct {        /* solution options type */
