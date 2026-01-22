@@ -43,7 +43,7 @@
 #define ERR_CBIAS   0.3         /* code bias error Std (m) */
 #define REL_HUMI    0.7         /* relative humidity for Saastamoinen model */
 #define MIN_EL      (5.0*D2R)   /* min elevation for measurement error (rad) */
-# define MAX_GDOP   30          /* max gdop for valid solution  */
+#define MAX_GDOP   30          /* max gdop for valid solution  */
 
 /* pseudorange measurement error variance ------------------------------------*/
 static double varerr(const prcopt_t *opt, const ssat_t *ssat, const obsd_t *obs, double el, int sys)
@@ -427,7 +427,7 @@ static int valsol(const double *azel, const int *vsat, int n,
     vv=dot(v,v,nv);
     if (nv>nx&&vv>chisqr[nv-nx-1]) {
         sprintf(msg,"Warning: large chi-square error nv=%d vv=%.1f cs=%.1f",nv,vv,chisqr[nv-nx-1]);
-        /* return 0; */ /* threshold too strict for all use cases, report error but continue on */
+        return 0; /* threshold too strict for all use cases, report error but continue on */
     }
     /* large GDOP check */
     for (i=ns=0;i<n;i++) {
