@@ -245,7 +245,7 @@ extern "C" {
 #define MAXDTOE_IRN 7200.0              /* max time difference to IRNSS Toe (s) */
 #define MAXDTOE_SBS 360.0               /* max time difference to SBAS Toe (s) */
 #define MAXDTOE_S   86400.0             /* max time difference to ephem toe (s) for other */
-#define MAXGDOP     300.0               /* max GDOP */
+#define MAXGDOP     30.0               /* max GDOP. 300 by default in rtklib */
 
 #define INT_SWAP_TRAC 86400.0           /* swap interval of trace file (s) */
 #define INT_SWAP_STAT 86400.0           /* swap interval of solution status file (s) */
