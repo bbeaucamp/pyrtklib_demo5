@@ -73,7 +73,7 @@ static double varerr(const prcopt_t *opt, const ssat_t *ssat, const obsd_t *obs,
         snr_rover = (ssat) ? SNR_UNIT * ssat->snr_rover[0] : opt->err[5];
 
         varr = k * m * pow(10.0, -0.1 * snr_rover) / SQR(sin(el));
-        return varr;  /* least squares takes sqrt, we cancel it by taking the SQR here */
+        return SQR(varr);  /* least squares takes sqrt, we cancel it by taking the SQR here */
     }
 
     /* Default weighting mode (original RTKLIB behavior) */
