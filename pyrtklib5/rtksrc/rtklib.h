@@ -1050,6 +1050,7 @@ typedef struct {        /* processing options type */
     uint8_t exsats[MAXSAT]; /* excluded satellites (1:excluded,2:included) */
     int  maxaveep;      /* max averaging epochs */
     int  initrst;       /* initialize by restart */
+    int  chisqrej;      /* chi-square residual rejection (0:off,1:on) */
     int  outsingle;     /* output single by dgps/float/fix/ppp outage */
     char rnxopt[2][256]; /* rinex options {rover,base} */
     int  posopt[6];     /* positioning options */

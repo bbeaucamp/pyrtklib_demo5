@@ -2266,6 +2266,7 @@ PYBIND11_MODULE(pyrtklib5, m) {
         .def_readwrite("maxtdiff",&prcopt_t::maxtdiff)
         .def_readwrite("maxaveep",&prcopt_t::maxaveep)
         .def_readwrite("initrst",&prcopt_t::initrst)
+        .def_readwrite("chisqrej",&prcopt_t::chisqrej)
         .def_readwrite("outsingle",&prcopt_t::outsingle)
         .def_readwrite("syncsol",&prcopt_t::syncsol)
         .def_readwrite("freqopt",&prcopt_t::freqopt)

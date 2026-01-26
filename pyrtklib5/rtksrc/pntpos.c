@@ -73,7 +73,7 @@ static double varerr(const prcopt_t *opt, const ssat_t *ssat, const obsd_t *obs,
         snr_rover = (ssat) ? SNR_UNIT * ssat->snr_rover[0] : opt->err[5];
 
         varr = k * m * pow(10.0, -0.1 * snr_rover) / SQR(sin(el));
-        return SQR(varr);  /* least squares takes sqrt, we cancel it by taking the SQR here */
+        return varr;  /* least squares takes sqrt, we cancel it by taking the SQR here */
     }
 
     /* Default weighting mode (original RTKLIB behavior) */
@@ -426,8 +426,9 @@ static int valsol(const double *azel, const int *vsat, int n,
     /* Chi-square validation of residuals */
     vv=dot(v,v,nv);
     if (nv>nx&&vv>chisqr[nv-nx-1]) {
-        sprintf(msg,"Warning: large chi-square error nv=%d vv=%.1f cs=%.1f",nv,vv,chisqr[nv-nx-1]);
-        return 0; /* threshold too strict for all use cases, report error but continue on */
+        sprintf(msg,"Warning: large chi-square error nv=%d vv=%.1f cs=%.1f",
+                nv,vv,chisqr[nv-nx-1]);
+        if (opt->chisqrej) return 0;
     }
     /* large GDOP check */
     for (i=ns=0;i<n;i++) {
