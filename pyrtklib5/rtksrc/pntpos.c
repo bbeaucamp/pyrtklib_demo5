@@ -43,12 +43,41 @@
 #define ERR_CBIAS   0.3         /* code bias error Std (m) */
 #define REL_HUMI    0.7         /* relative humidity for Saastamoinen model */
 #define MIN_EL      (5.0*D2R)   /* min elevation for measurement error (rad) */
-# define MAX_GDOP   30          /* max gdop for valid solution  */
+#define MAX_GDOP   30          /* max gdop for valid solution  */
 
 /* pseudorange measurement error variance ------------------------------------*/
 static double varerr(const prcopt_t *opt, const ssat_t *ssat, const obsd_t *obs, double el, int sys)
 {
-    double fact=1.0,varr,snr_rover;
+    double varr, snr_rover;
+
+    /* Custom visibility-based weighting mode */
+    if (opt->wgtmode == 1) {
+        /* Formula: k * m * 10^(-0.1*snr) / sin^2(el)
+         * k = visibility weight factor
+         * m = SNR weight factor from opt->err[6]
+         */
+        double k = 1.0;  /* visibility weight */
+        // double m = opt->err[6];  /* SNR weight factor */
+        double m = 13500*2.25;
+
+        if (obs != NULL) {
+            switch (obs->vis) {
+                case VIS_LOS:     k = opt->viswgt[1]; break;
+                case VIS_NLOS:    k = opt->viswgt[2]; break;
+                case VIS_UNKNOWN:
+                default:          k = opt->viswgt[0]; break;
+            }
+        }
+
+        if (el < MIN_EL) el = MIN_EL;
+        snr_rover = (ssat) ? SNR_UNIT * ssat->snr_rover[0] : opt->err[5];
+
+        varr = k * m * pow(10.0, -0.1 * snr_rover) / SQR(sin(el));
+        return SQR(varr);  /* least squares takes sqrt, we cancel it by taking the SQR here */
+    }
+
+    /* Default weighting mode (original RTKLIB behavior) */
+    double fact = 1.0;
 
     switch (sys) {
         case SYS_GPS: fact *= EFACT_GPS; break;
@@ -59,19 +88,21 @@ static double varerr(const prcopt_t *opt, const ssat_t *ssat, const obsd_t *obs,
         case SYS_IRN: fact *= EFACT_IRN; break;
         default:      fact *= EFACT_GPS; break;
     }
-    if (el<MIN_EL) el=MIN_EL;
+    if (el < MIN_EL) el = MIN_EL;
+
     /* var = R^2*(a^2 + (b^2/sin(el) + c^2*(10^(0.1*(snr_max-snr_rover)))) + (d*rcv_std)^2) */
-    varr=SQR(opt->err[1])+SQR(opt->err[2])/sin(el);
-    if (opt->err[6]>0.0) {  /* if snr term not zero */
-        snr_rover=(ssat)?SNR_UNIT*ssat->snr_rover[0]:opt->err[5];
-        varr+=SQR(opt->err[6])*pow(10,0.1*MAX(opt->err[5]-snr_rover,0));
+    varr = SQR(opt->err[1]) + SQR(opt->err[2]) / sin(el);
+    if (opt->err[6] > 0.0) {  /* if snr term not zero */
+        snr_rover = (ssat) ? SNR_UNIT * ssat->snr_rover[0] : opt->err[5];
+        varr += SQR(opt->err[6]) * pow(10, 0.1 * MAX(opt->err[5] - snr_rover, 0));
     }
-    varr*=SQR(opt->eratio[0]);
-    if (opt->err[7]>0.0) {
-        varr+=SQR(opt->err[7]*0.01*(1<<(obs->Pstd[0]+5)));  /* 0.01*2^(n+5) m */
+    varr *= SQR(opt->eratio[0]);
+    if (opt->err[7] > 0.0) {
+        varr += SQR(opt->err[7] * 0.01 * (1 << (obs->Pstd[0] + 5)));  /* 0.01*2^(n+5) m */
     }
-    if (opt->ionoopt==IONOOPT_IFLC) varr*=SQR(3.0); /* iono-free */
-    return SQR(fact)*varr;
+    if (opt->ionoopt == IONOOPT_IFLC) varr *= SQR(3.0); /* iono-free */
+
+    return SQR(fact) * varr;
 }
 /* get group delay parameter (m) ---------------------------------------------*/
 static double gettgd(int sat, const nav_t *nav, int type)
@@ -395,8 +426,9 @@ static int valsol(const double *azel, const int *vsat, int n,
     /* Chi-square validation of residuals */
     vv=dot(v,v,nv);
     if (nv>nx&&vv>chisqr[nv-nx-1]) {
-        sprintf(msg,"Warning: large chi-square error nv=%d vv=%.1f cs=%.1f",nv,vv,chisqr[nv-nx-1]);
-        /* return 0; */ /* threshold too strict for all use cases, report error but continue on */
+        sprintf(msg,"Warning: large chi-square error nv=%d vv=%.1f cs=%.1f",
+                nv,vv,chisqr[nv-nx-1]);
+        if (opt->chisqrej) return 0;
     }
     /* large GDOP check */
     for (i=ns=0;i<n;i++) {
