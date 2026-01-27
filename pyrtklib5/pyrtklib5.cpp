@@ -2384,6 +2384,7 @@ PYBIND11_MODULE(pyrtklib5, m) {
         .def_property_readonly("var_err",[](ssat_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.var_err,MAXITR);return tmp;},py::return_value_policy::reference)
         .def_property_readonly("azel",[](ssat_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.azel,2);return tmp;},py::return_value_policy::reference)
         .def_property_readonly("resp",[](ssat_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.resp,NFREQ);return tmp;},py::return_value_policy::reference)
+        .def_property_readonly("resn",[](ssat_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.resn,NFREQ);return tmp;},py::return_value_policy::reference)
         .def_property_readonly("resc",[](ssat_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.resc,NFREQ);return tmp;},py::return_value_policy::reference)
         .def_property_readonly("icbias",[](ssat_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.icbias,NFREQ);return tmp;},py::return_value_policy::reference)
         .def_property_readonly("vsat",[](ssat_t& o) {Arr1D<uint8_t>* tmp = new Arr1D<uint8_t>(o.vsat,NFREQ);return tmp;},py::return_value_policy::reference)

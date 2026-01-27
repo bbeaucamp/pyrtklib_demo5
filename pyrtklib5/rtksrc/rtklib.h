@@ -1145,6 +1145,7 @@ typedef struct {        /* satellite status type */
     uint8_t vs;         /* valid satellite flag single */
     double azel[2];     /* azimuth/elevation angles {az,el} (rad) */
     double resp[NFREQ]; /* residuals of pseudorange (m) */
+    double resn[NFREQ]; /* normalized residuals of pseudorange */
     double resc[NFREQ]; /* residuals of carrier-phase (m) */
     double icbias[NFREQ];  /* glonass IC bias (cycles) */
     uint8_t vsat[NFREQ]; /* valid satellite flag */
